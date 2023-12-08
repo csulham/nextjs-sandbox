@@ -14,7 +14,7 @@ export default async function handler(
     }
     const cursor = req.query['cursor'];
     console.log('Cursor param=' + cursor);
-
+/*
     const simpleQuery= `
       query SimpleQuery{
         layout(site: "suncoast", routePath: "/", language: "en") {
@@ -24,7 +24,7 @@ export default async function handler(
         }
       }
     `;
-
+*/
     const crawlQuery = `
       query YextSiteCrawl(
           $numResults: Int
@@ -70,8 +70,8 @@ export default async function handler(
       'content-type': 'application/json',
       'sc_apikey': process.env.SUNCOAST_DEV_API_KEY ?? ''
     };
-    console.log('api key=' + process.env.SUNCOAST_DEV_API_KEY)
-    console.log('Header ' + JSON.stringify(headers));
+    //console.log('api key=' + process.env.SUNCOAST_DEV_API_KEY)
+    //console.log('Header ' + JSON.stringify(headers));
 
     const requestBody = {
       query: crawlQuery,
@@ -83,18 +83,13 @@ export default async function handler(
         "noIndex": 1
        }
     };
-    console.log('Request Body '+ JSON.stringify(requestBody));
+    console.log('Request Body\n '+ JSON.stringify(requestBody));
     const options = {
       method: 'POST',
       headers,
       body: JSON.stringify(requestBody)
     };
-    /*
-    const testResp = await (await fetch('https://edge.sitecorecloud.io/api/graphql/v1', options));
 
-    console.log('status= ' + testResp.status);
-    console.log('response= '+ JSON.stringify(testResp.json()));
-    */
     const response = await (await fetch('https://edge.sitecorecloud.io/api/graphql/v1', options)).json();
     console.log('RESPONSE FROM FETCH REQUEST', response?.data);
     res.status(200).json(response?.data);
