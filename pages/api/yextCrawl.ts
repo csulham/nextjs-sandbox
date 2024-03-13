@@ -1,44 +1,75 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next';
 
 type ResponseData = {
-  message: string
-}
- 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<ResponseData>
-) {  
+  message: string;
+};
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
     if (!req) {
       return;
     }
+    // Check the API key
+    if (req.query['api_key'] != process.env.YEXT_CRAWL_API_KEY) {
+      res.status(403).json({ message: 'Forbidden' });
+      return;
+    }
+
+    // Pull the page cursor from the query params
     const cursor = req.query['cursor'];
-    console.log('Cursor param=' + cursor);
-/*
-    const simpleQuery= `
-      query SimpleQuery{
-        layout(site: "suncoast", routePath: "/", language: "en") {
-          item {
-            rendered
-          }
-        }
-      }
-    `;
-*/
-    const crawlQuery = `
+
+    const rootItem = req.query['root'] ?? process.env.YEXT_CRAWL_ROOT_ITEM;
+
+    const headers = {
+      'content-type': 'application/json',
+      sc_apikey: process.env.SITECORE_API_KEY ?? '',
+    };
+    //console.log('Yext Crawl- Request Header\n ' + JSON.stringify(headers));
+
+    const requestBody = {
+      query: crawlQuery,
+      variables: {
+        numResults: 10,
+        after: cursor ?? '',
+        rootItem: rootItem,
+        hasLayout: 'true'
+      },
+    };
+
+    //console.log('Yext Crawl- Request Body\n ' + JSON.stringify(requestBody));
+    const options = {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(requestBody),
+    };
+
+    const endPoint =
+      process.env.GRAPH_QL_ENDPOINT ?? 'https://edge.sitecorecloud.io/api/graphql/v1';
+
+    const response = await (await fetch(endPoint, options)).json();    
+    
+    console.log('Yext Crawl- Response:', response);
+    console.log('Yext Crawl- Response Data\n', response?.data);
+    
+    res.status(200).json(response?.data);
+  } catch (err) {
+    console.log('ERROR during Yext Crawl request:', err);
+  } finally {
+  }
+}
+
+const crawlQuery = `
       query YextSiteCrawl(
           $numResults: Int
           $after: String
           $rootItem: String!
           $hasLayout: String!
-          $noIndex: Int
       ) {
           search(
           where: {
               AND: [
-              { name: "_path", value: $rootItem, operator: EQ }
-              { name: "_hasLayout", value: $hasLayout }
-              { name: "noIndex", value: $noIndex, operator: NEQ }
+                { name: "_path", value: $rootItem, operator: EQ }
+                { name: "_hasLayout", value: $hasLayout }
               ]
           }
           first: $numResults
@@ -54,50 +85,14 @@ export default async function handler(
               name
               path
               url {
-              path
-              url
+                path
+                url
               }
               fields {
-              name
-              jsonValue
+                name
+                jsonValue
               }
           }
         }
       }
   `;
- 
-    const headers = {
-      'content-type': 'application/json',
-      'sc_apikey': process.env.SUNCOAST_DEV_API_KEY ?? ''
-    };
-    //console.log('api key=' + process.env.SUNCOAST_DEV_API_KEY)
-    //console.log('Header ' + JSON.stringify(headers));
-
-    const requestBody = {
-      query: crawlQuery,
-      variables: { 
-        "numResults" : 10,
-        "after" : cursor ?? "",
-        "rootItem": "{1E411842-1C89-4016-AEF2-EF80CCFABFE6}",
-        "hasLayout": "true",
-        "noIndex": 1
-       }
-    };
-    console.log('Request Body\n '+ JSON.stringify(requestBody));
-    const options = {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(requestBody)
-    };
-
-    const response = await (await fetch('https://edge.sitecorecloud.io/api/graphql/v1', options)).json();
-    console.log('RESPONSE FROM FETCH REQUEST', response?.data);
-    res.status(200).json(response?.data);
-  }
-  catch (err) {
-    console.log('ERROR DURING FETCH REQUEST', err);
-  }
-  finally {
-    
-  }
-};
