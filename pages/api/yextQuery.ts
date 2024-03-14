@@ -12,14 +12,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     // Decode the query params to the parameter structure
     const incomingParams: YextSearchParams = {
-      //audience: req.query.audience?.toString() ?? '',
-      //authors: req.query.authors?.toString() ?? '',
-      //blogCategories: req.query.blogcategories?.toString() ?? '',
       contentTypes: req.query.contenttypes?.toString() ?? '',
-      //eventTypes: req.query.eventtypes?.toString() ?? '',
       locations: req.query.locations?.toString() ?? '',
-      //memberStatus: req.query.memberstatus?.toString() ?? '',
-      //products: req.query.products?.toString() ?? '',
       topics: req.query.topics?.toString() ?? '',
       page: parseInt(req.query.page as string) ?? 0,
       numResults: parseInt(req.query.numResults as string) ?? 9,
@@ -83,14 +77,8 @@ function GetYextFiltersFromUrlParams(req: YextSearchParams): string {
   const taxonomyClauses = [];
 
   // Create all the taxonomy clauses from the parameters
-  //taxonomyClauses.push(GetTaxonomyFilterClause('c_audience', req.audience));
-  //taxonomyClauses.push(GetTaxonomyFilterClause('c_authors', req.authors));
-  //taxonomyClauses.push(GetTaxonomyFilterClause('c_blogCategory', req.blogCategories));
   taxonomyClauses.push(GetTaxonomyFilterClause('c_contentType', req.contentTypes));
-  //taxonomyClauses.push(GetTaxonomyFilterClause('c_eventType', req.eventTypes));
   taxonomyClauses.push(GetTaxonomyFilterClause('c_locations', req.locations));
-  //taxonomyClauses.push(GetTaxonomyFilterClause('c_memberStatus', req.memberStatus));
-  //taxonomyClauses.push(GetTaxonomyFilterClause('c_products', req.products));
   taxonomyClauses.push(GetTaxonomyFilterClause('c_topic', req.topics));
 
   // Filter out empty clauses and combine them within the 'and' clause
@@ -147,14 +135,14 @@ function GetDate(): string {
  * Incorrect: params.Topics = '{AC5AB52E-0319-4166-9847-B31CC071CA7E},{C4FA9F40-8CE1-4725-B180-13EC9E09D21F}'
  */
 export type YextSearchParams = {
-  audience?: string;
-  authors?: string;
-  blogCategories?: string;
+  //audience?: string;
+  //authors?: string;
+  //blogCategories?: string;
   contentTypes?: string;
-  eventTypes?: string;
+  //eventTypes?: string;
   locations?: string;
-  memberStatus?: string;
-  products?: string;
+  //memberStatus?: string;
+  //products?: string;
   topics?: string;
   page: number;
   numResults: number;
