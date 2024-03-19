@@ -1,6 +1,7 @@
 // Import the Next.js API route handler
 import { NextApiRequest, NextApiResponse } from 'next';
 import { graphqlRequest, GraphQLRequest } from '@/util/GraphQLQuery';
+import { GetDate } from '@/util/GetDate';
 
 // Define the API route handler
 export default async function onPublishEnd(req: NextApiRequest, res: NextApiResponse) {
@@ -37,17 +38,40 @@ export default async function onPublishEnd(req: NextApiRequest, res: NextApiResp
           query: itemQuery,
           variables: { id: guid },
         };
-        console.log('Getting GQL Data for item ' + guid);
+        
         // Invoke the GraphQL query with the request
+        //console.log(`Getting GQL Data for item ${guid}`);
         const result = await graphqlRequest(request);
+        //console.log('Item Data:\n' + JSON.stringify(result));
 
-        console.log('Item Data:\n' + JSON.stringify(result));
-
-        // TODO: Handle the result of the GraphQL query
-        // 1. Make sure we got some data from GQL
-        // 2. Check if it's in the right site (the webhook fires for every site) by comparing the path
-        // 3. Send the json data to the Yext Push API endpoint
-
+        // Make sure we got some data from GQL in the result
+        if (!result || !result.item) {
+            console.log(`No data returned from GraphQL for item ${guid}`);
+            continue;
+          }
+  
+          // Check if it's in the right site by comparing the item.path
+          if (!result.item.path.startsWith('/sitecore/content/Search Demo/Search Demo/')) {
+            console.log(`Item ${guid} is not in the right site`);
+            continue;
+          }
+  
+          // Send the json data to the Yext Push API endpoint
+          const pushApiEndpoint = `${process.env.YEXT_PUSH_API_ENDPOINT}?v=${GetDate()}&api_key=${process.env.YEXT_PUSH_API_KEY}`;
+          console.log(`Pushing to ${pushApiEndpoint}\nData:\n${JSON.stringify(result)}`);
+          
+          const yextResponse = await fetch(pushApiEndpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(result),
+          });
+          
+          if (!yextResponse.ok) {
+            console.log(`Failed to push data to Yext for item ${guid}: ${yextResponse.status} ${yextResponse.statusText}`);
+          }
+        
       } catch (error) {
         // If an error occurs while invoking the GraphQL query, return a 500 error
         return res.status(500).json({ message: 'Internal Server Error: GraphQL query failed' })
