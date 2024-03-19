@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     };
     //console.log('Yext Crawl- Request Header\n ' + JSON.stringify(headers));
 
-    const requestBody = {
+    const requestBody: GraphQLRequest = {
       query: crawlQuery,
       variables: {
         numResults: 10,
@@ -37,22 +37,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       },
     };
 
-    //console.log('Yext Crawl- Request Body\n ' + JSON.stringify(requestBody));
-    const options = {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(requestBody),
-    };
-
-    const endPoint =
-      process.env.GRAPH_QL_ENDPOINT ?? 'https://edge.sitecorecloud.io/api/graphql/v1';
-
-    const response = await (await fetch(endPoint, options)).json();    
+    const response = await graphqlRequest(requestBody);    
     
     console.log('Yext Crawl- Response:', response);
-    console.log('Yext Crawl- Response Data\n', response?.data);
     
-    res.status(200).json(response?.data);
+    res.status(200).json(response);
   } catch (err) {
     console.log('ERROR during Yext Crawl request:', err);
   } finally {
