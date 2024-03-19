@@ -25,6 +25,8 @@ export default async function onPublishEnd(req: NextApiRequest, res: NextApiResp
     return res.status(400).json({ message: 'Bad Request. Check incoming data.' });
   }
 
+  const items = [];
+
   // Loop over all the entries in updates
   for (const update of data.updates) {
     // Check if the entity_definition is LayoutData
@@ -55,28 +57,31 @@ export default async function onPublishEnd(req: NextApiRequest, res: NextApiResp
             console.log(`Item ${guid} is not in the right site`);
             continue;
           }
-  
-          // Send the json data to the Yext Push API endpoint
-          const pushApiEndpoint = `${process.env.YEXT_PUSH_API_ENDPOINT}?v=${GetDate()}&api_key=${process.env.YEXT_PUSH_API_KEY}`;
-          console.log(`Pushing to ${pushApiEndpoint}\nData:\n${JSON.stringify(result)}`);
-          
-          const yextResponse = await fetch(pushApiEndpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(result),
-          });
-          
-          if (!yextResponse.ok) {
-            console.log(`Failed to push data to Yext for item ${guid}: ${yextResponse.status} ${yextResponse.statusText}`);
-          }
+
+          // Add the item to the items array
+          items.push(result.item)
         
       } catch (error) {
         // If an error occurs while invoking the GraphQL query, return a 500 error
         return res.status(500).json({ message: 'Internal Server Error: GraphQL query failed' })
       }
     }
+  }
+ // Send the json data to the Yext Push API endpoint
+ const pushApiEndpoint = `${process.env.YEXT_PUSH_API_ENDPOINT}?v=${GetDate()}&api_key=${process.env.YEXT_PUSH_API_KEY}`;
+ console.log(`Pushing to ${pushApiEndpoint}\nData:\n${JSON.stringify(items)}`);
+ 
+ // Send all the items to the Yext Push API endpoint
+ const yextResponse = await fetch(pushApiEndpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(items),
+  });
+
+  if (!yextResponse.ok) {
+    console.log(`Failed to push data to Yext: ${yextResponse.status} ${yextResponse.statusText}`);
   }
 
   // Send a response
