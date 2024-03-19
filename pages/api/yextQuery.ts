@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { GetDate } from '@/util/GetDate';
 
 type ResponseData = {
   message: string;
@@ -20,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       sort: req.query.sort?.toString() ?? '',
     };
 
-    console.log('Yext Query Incoming params: \n' + JSON.stringify(incomingParams));
+    //console.log('Yext Query Incoming params: \n' + JSON.stringify(incomingParams));
 
     if (isNaN(incomingParams.numResults) || incomingParams.numResults < 1) {
       // Ensure this is a number, otherwise set to 9.
@@ -106,26 +107,6 @@ function GetTaxonomyFilterClause(name: string, values?: string): string {
   return JSON.stringify(filterClause);
 }
 
-function GetDate(): string {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = today.getMonth() + 1; // Months start at 0!
-  const dd = today.getDate();
-  let MM = mm.toString();
-  let DD = dd.toString();
-
-  if (dd < 10) {
-    DD = '0' + dd;
-  }
-
-  if (mm < 10) {
-    MM = '0' + mm;
-  }
-
-  // Return date in YYYYMMDD format for Yext param
-  return yyyy + MM + DD;
-}
-
 /**
  * @description Data structure that should be serialized into URL query parameters for a Yext entities API search.
  * Page parameter starts at 1.
@@ -135,14 +116,8 @@ function GetDate(): string {
  * Incorrect: params.Topics = '{AC5AB52E-0319-4166-9847-B31CC071CA7E},{C4FA9F40-8CE1-4725-B180-13EC9E09D21F}'
  */
 export type YextSearchParams = {
-  //audience?: string;
-  //authors?: string;
-  //blogCategories?: string;
   contentTypes?: string;
-  //eventTypes?: string;
   locations?: string;
-  //memberStatus?: string;
-  //products?: string;
   topics?: string;
   page: number;
   numResults: number;

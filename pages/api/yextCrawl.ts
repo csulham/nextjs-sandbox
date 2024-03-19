@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { graphqlRequest, GraphQLRequest } from '@/util/GraphQLQuery';
 
 type ResponseData = {
   message: string;
